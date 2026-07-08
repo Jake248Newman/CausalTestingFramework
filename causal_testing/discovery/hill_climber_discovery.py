@@ -21,7 +21,7 @@ class HillClimberDiscovery(Discovery):
     def __init__(
         self,
         df: pd.DataFrame,
-        random_seed: int = 0,
+        random_seed: int = 63,
         include_edges: str = None,
         exclude_edges: str = None,
         alpha: float = 0.05,
@@ -109,17 +109,21 @@ class HillClimberDiscovery(Discovery):
         :returns: The inferred causal DAG.
         """
 
+        print("Max iterations without improvement: %d", self.max_iterations_without_improvement)
+
         start_time = time.time()
         individual = CausalDAG()
         individual.add_nodes_from(self.df.columns)
         individual.add_edges_from(self.possible_edges)
         self.remove_cycles(individual)
         fitness_values, problem_edges = self.evaluate_fitness(individual)
+        print("Initial fitness values: %s", fitness_values)
 
         iterations = self.max_iterations
         iterations_without_improvement = 0
 
         while problem_edges and iterations:
+            print("Iteration: %d, iterations without improvement: %d", iterations, iterations_without_improvement)
             iterations -= 1
 
             new_individual = individual.copy()
@@ -140,6 +144,7 @@ class HillClimberDiscovery(Discovery):
                     new_individual.add_edge(origin, dest, ignore_cycles=True)
             self.remove_cycles(new_individual)
             new_fitness_values, new_problem_edges = self.evaluate_fitness(new_individual)
+            print("New fitness values: %s", new_fitness_values)
 
             if new_fitness_values > fitness_values:
                 fitness_values = new_fitness_values
